@@ -52,18 +52,22 @@
       transform: scale(1.05);
     }
 
-    /* Zurück-Button */
-    .back-btn {
+    /* Home-Button unten links */
+    .home-btn {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: none;
+      left: 16px;
+      bottom: 16px;
+      background: #fff;
       border: none;
+      border-radius: 12px;
+      padding: 6px;
       cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,.35);
     }
-    .back-btn img {
-      width: 40px;
-      height: 40px;
+    .home-btn img {
+      width: 34px;
+      height: 34px;
+      display: block;
     }
   </style>
 </head>
@@ -85,9 +89,9 @@
     <button data-role="admin" onclick="window.open('https://drive.google.com/drive/folders/16KKr7v2r9QbAPNmIUZbSoO0KfvWbtPai?usp=sharing','_blank')">Drive</button>
   </div>
 
-  <!-- Zurück -->
-  <button class="back-btn" onclick="location.href='login.html'">
-    <img src="PL.jpg" alt="Zurück">
+  <!-- Home-Button -->
+  <button class="home-btn" onclick="location.href='index.html'">
+    <img src="home.jpg" alt="Home">
   </button>
 
   <script>
