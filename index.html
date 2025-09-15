@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WingTsun — Startseite</title>
+  <style>
+    :root { --bg: #000; --text: #fff; --accent-bg: #fff; --accent-text:#000; }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg); color: var(--text);
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* Header mit 3 Logos */
+    .header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 16px;
+      gap:12px;
+    }
+    .header img { height:54px; width:auto; object-fit:contain; }
+
+    /* Menübutton & Menü */
+    .center {
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .menu-btn {
+      background: var(--accent-bg); color:var(--accent-text);
+      border: none; padding:10px 20px; font-size:18px;
+      border-radius:12px; cursor:pointer; margin-top:6px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+    }
+    .menu-list {
+      display:none; flex-direction:column; gap:10px; margin-top:12px;
+    }
+    .menu-list button {
+      background: transparent; color:var(--text); border:1px solid #444;
+      padding:8px 12px; border-radius:8px; cursor:pointer;
+    }
+
+    /* Newsticker */
+    .ticker {
+      margin: 20px auto; width:90%; max-width:900px;
+      overflow:hidden; border-radius:8px; border:1px solid #222;
+      padding:10px; text-align:left;
+      background: rgba(255,255,255,0.03);
+    }
+    .ticker-inner { display:inline-block; white-space:nowrap; padding-left:100%; font-size:16px; }
+    @keyframes scroll {
+      0% { transform: translateX(0%); }
+      100% { transform: translateX(-100%); }
+    }
+    .ticker-inner.animate { animation: scroll linear infinite; animation-duration:12s; }
+
+    /* Kalender iframe */
+    .calendar-wrap { margin:18px auto; width:100%; max-width:1000px; height:520px; }
+    .calendar-wrap iframe { width:100%; height:100%; border: none; border-radius:8px; background:#fff; }
+
+    /* Responsive */
+    @media (max-width:600px) {
+      .header img { height:40px; }
+      .calendar-wrap { height:420px; }
+      .menu-btn { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header / Logos -->
+  <div class="header">
+    <img id="logo-left" src="pluslogo.png" alt="Logo links">
+    <img id="logo-center" src="faust.jpg" alt="Logo Mitte">
+    <img id="logo-right" src="melsungen.jpg" alt="Logo rechts">
+  </div>
+
+  <!-- Mitte: Menübutton -->
+  <div class="center">
+    <button class="menu-btn" id="menuToggle">Menü</button>
+
+    <div id="menuList" class="menu-list" role="menu" aria-hidden="true">
+      <!-- Du kannst diese Buttons später auf echte Seiten oder Links zeigen lassen -->
+      <button onclick="location.href='ausbilderunterlagen.html'">Ausbilderunterlagen</button>
+      <button onclick="location.href='spiele.html'">Spiele</button>
+      <button onclick="location.href='bilder.html'">Bilder</button>
+      <button onclick="location.href='videos.html'">Videos</button>
+      <button onclick="location.href='login.html'">Login</button>
+    </div>
+
+    <div style="margin-top:8px; font-size:14px; color:#ddd;">Newsticker</div>
+  </div>
+
+  <!-- Newsticker -->
+  <div class="ticker" aria-live="polite">
+    <div id="tickerInner" class="ticker-inner">Lade Newsticker…</div>
+  </div>
+
+  <!-- Kalender (iframe) -->
+  <div class="calendar-wrap">
+    <iframe id="calendarFrame" src="https://kalender.digital/704b2636b9f5eade1f50" title="Trainingskalender"></iframe>
+  </div>
+
+  <script>
+  // Menü
+  const toggle = document.getElementById('menuToggle');
+  const menu = document.getElementById('menuList');
+  toggle.addEventListener('click', () => {
+    const visible = menu.style.display === 'flex';
+    menu.style.display = visible ? 'none' : 'flex';
+    menu.setAttribute('aria-hidden', visible ? 'true' : 'false');
+  });
+
+  // Newsticker (Google Sheets "Im Web veröffentlichen" → CSV)
+  const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSz0Nz9urL-qdvTiuCemR1YbBx1UAZk_EpAm8y2mKCi0CIID24jCe3LweIYl5hQPDKptItwOe5Q660i/pub?output=csv";
+
+  async function loadTicker() {
+    try {
+      const res = await fetch(csvUrl);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const clean = text.replace(/^\uFEFF/, "").trim();
+      const first = clean.split(/\r?\n/).find(line => line.trim() !== "") || "Keine Daten gefunden";
+      const el = document.getElementById("tickerInner");
+      el.textContent = first;
+
+      // sanfte Laufgeschwindigkeit je nach Textlänge
+      const dur = Math.min(Math.max(first.length / 6, 8), 30);
+      el.classList.add('animate');
+      el.style.animationDuration = dur + 's';
+    } catch (e) {
+      console.error(e);
+      document.getElementById("tickerInner").textContent = "Fehler beim Laden des Newstickers";
+    }
+  }
+
+  loadTicker();
+</script>
+</body>
+</html>
