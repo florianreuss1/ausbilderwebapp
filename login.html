@@ -232,7 +232,7 @@
         msg("Erfolgreich angemeldet.", true);
         sessionStorage.setItem("loggedInUser", u.trim());
         sessionStorage.setItem("role", res.role || "");
-        setTimeout(() => location.href = "ausbilderunterlagen.html", 350);
+        setTimeout(() => location.href = "administrator.html", 350);
       } else {
         msg("Falscher Nutzer oder Passwort.");
       }
