@@ -106,90 +106,142 @@
 
   <!-- Login-Logik -->
   <script>
-    // === CSV mit Nutzern: NUTZER,PASSWORT,ROLLE ===
-    // (Google Sheets -> Datei -> Im Web veröffentlichen -> CSV)
-    const USERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQzW4h50a-fzAJI_JmCQnbvojwAUKrgXzlxGTz_DHk8FbjMMGv-nzrlVtPawvQQ_zyiC_eLELNMDFuB/pub?output=csv";
+  // === DEIN veröffentlichter CSV-Link (Google Sheets -> Im Web veröffentlichen -> CSV)
+  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQzW4h50a-fzAJI_JmCQnbvojwAUKrgXzlxGTz_DHk8FbjMMGv-nzrlVtPawvQQ_zyiC_eLELNMDFuB/pub?output=csv";
 
-    const $ = (s)=>document.querySelector(s);
-    const msg = (t, ok=false)=>{
-      const box = $("#msg");
-      box.textContent = t || " ";
-      box.classList.toggle("empty", !t);
-      box.style.background = ok ? "#e7ffe7" : "#fff";
-    };
+  // Optionen
+  const USER_CASE_INSENSITIVE = true; // Benutzername ohne Groß/Klein vergleichen
+  const TRIM_ALL_FIELDS = true;       // Leerzeichen um Felder herum entfernen
 
-    // robuster Mini-CSV-Parser (unterstützt Anführungszeichen)
-    function parseCSV(text) {
-      const rows = [];
-      let cur = "", row = [], inQuotes = false;
-      for (let i = 0; i < text.length; i++) {
-        const c = text[i], n = text[i+1];
-        if (c === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
-        if (c === '"') { inQuotes = !inQuotes; continue; }
-        if (!inQuotes && c === ',') { row.push(cur); cur = ""; continue; }
-        if (!inQuotes && (c === '\n' || c === '\r')) {
-          if (cur.length || row.length) { row.push(cur); rows.push(row); }
-          cur = ""; row = [];
-          continue;
-        }
-        cur += c;
+  const $ = (s)=>document.querySelector(s);
+  const msg = (t, ok=false)=>{
+    const box = $("#msg");
+    box.textContent = t || " ";
+    box.classList.toggle("empty", !t);
+    box.style.background = ok ? "#e7ffe7" : "#fff";
+  };
+
+  // CSV-Parser (unterstützt Anführungszeichen, Kommas; fallback auf ; )
+  function parseCSV(text) {
+    const rows = [];
+    let cur = "", row = [], inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i], n = text[i+1];
+      if (c === '"' && inQuotes && n === '"') { cur += '"'; i++; continue; }
+      if (c === '"') { inQuotes = !inQuotes; continue; }
+      if (!inQuotes && c === ',') { row.push(cur); cur = ""; continue; }
+      if (!inQuotes && (c === '\n' || c === '\r')) {
+        if (cur.length || row.length) { row.push(cur); rows.push(row); }
+        cur = ""; row = [];
+        continue;
       }
-      if (cur.length || row.length) { row.push(cur); rows.push(row); }
-      if (rows.length === 1 && rows[0].length === 1 && text.includes(';')) {
-        return text.split(/\r?\n/).filter(Boolean).map(line => line.split(';'));
-      }
-      return rows;
+      cur += c;
     }
+    if (cur.length || row.length) { row.push(cur); rows.push(row); }
+    if (rows.length === 1 && rows[0].length === 1 && text.includes(';')) {
+      return text.split(/\r?\n/).filter(Boolean).map(line => line.split(';'));
+    }
+    return rows;
+  }
+  const normalizeRow = r => (r||[]).map(v => {
+    let x = v ?? "";
+    if (TRIM_ALL_FIELDS) x = x.trim();
+    return x;
+  });
 
-    async function fetchUsers() {
-      const res = await fetch(USERS_CSV_URL);
-      if (!res.ok) throw new Error("CSV HTTP " + res.status);
+  // robustes Laden mit Fallback auf CORS-Proxy, plus Cachebuster
+  async function loadCSVText() {
+    const primary = SHEET_URL + (SHEET_URL.includes("?") ? "&" : "?") + "cb=" + Date.now();
+    try {
+      const res = await fetch(primary, { cache: "no-store" });
+      console.log("[fetch primary]", res.status, res.statusText);
+      if (!res.ok) throw new Error("HTTP " + res.status);
       const text = (await res.text()).replace(/^\uFEFF/, "");
-      const rows = parseCSV(text).map(r => r.map(v => (v||"").trim()));
-      // Header erkennen/überspringen
-      const header = rows[0]?.map(h => h.toLowerCase());
-      let start = 0;
-      if (header && header.includes("nutzer") && header.includes("passwort") && header.includes("rolle")) start = 1;
-      return rows.slice(start).filter(r => r.length >= 2);
+      // Wenn es nach HTML aussieht (z. B. Fehler-/Login-Seite), auf Proxy fallen
+      if (/^\s*</.test(text)) throw new Error("Got HTML instead of CSV");
+      return text;
+    } catch (e) {
+      console.warn("[primary failed]", e);
+      const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(SHEET_URL) + "&cb=" + Date.now();
+      const res2 = await fetch(proxy, { cache: "no-store" });
+      console.log("[fetch proxy]", res2.status, res2.statusText);
+      if (!res2.ok) throw new Error("Proxy HTTP " + res2.status);
+      const text2 = (await res2.text()).replace(/^\uFEFF/, "");
+      return text2;
     }
+  }
 
-    async function authFromCSV(username, password) {
-      const rows = await fetchUsers();
-      for (const r of rows) {
-        const [u, p, role] = [r[0]||"", r[1]||"", r[2]||""];
-        if (u === username && p === password) return { ok:true, role: role || "" };
-      }
-      return { ok:false };
-    }
+  async function fetchUsers() {
+    const text = await loadCSVText();
+    console.log("[CSV raw head]", text.slice(0, 200) + (text.length > 200 ? "…" : ""));
+    let rows = parseCSV(text).map(normalizeRow).filter(r => r.some(x => x.length));
+    console.log("[CSV parsed rows]", rows);
 
-    // ENTER-Handling & Button
-    $("#user").addEventListener("keydown", e => { if(e.key==="Enter") $("#pass").focus(); });
-    $("#pass").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
-    $("#loginBtn").addEventListener("click", doLogin);
-
-    async function doLogin(){
-      const u = $("#user").value.trim();
-      const p = $("#pass").value;
-      if(!u || !p){ msg("Bitte Nutzer und Passwort eingeben."); return; }
-
-      msg("Prüfe Daten …");
-      try {
-        const res = await authFromCSV(u, p);
-        if (res.ok) {
-          msg("Erfolgreich angemeldet.", true);
-          // clientseitige Session (nur Demo, kein echter Schutz)
-          sessionStorage.setItem("loggedInUser", u);
-          sessionStorage.setItem("role", res.role || "");
-          // Weiterleitung (hier: Ausbilderbereich)
-          setTimeout(()=> location.href="ausbilderunterlagen.html", 350);
-        } else {
-          msg("Falscher Nutzer oder Passwort.");
-        }
-      } catch (err) {
-        console.error(err);
-        msg("Fehler beim Laden/Prüfen der Zugangsdaten.");
+    // Header dynamisch erkennen (Spaltennamen egal in welcher Reihenfolge)
+    let startIdx = 0, idxUser = 0, idxPass = 1, idxRole = 2;
+    if (rows.length > 0) {
+      const h = rows[0].map(h => (h || "").toLowerCase());
+      const hu = h.indexOf("nutzer");
+      const hp = h.indexOf("passwort");
+      const hr = h.indexOf("rolle");
+      if (hu !== -1 || hp !== -1 || hr !== -1) {
+        idxUser = hu !== -1 ? hu : 0;
+        idxPass = hp !== -1 ? hp : 1;
+        idxRole = hr !== -1 ? hr : 2;
+        startIdx = 1;
       }
     }
-  </script>
+    console.log(`[HeaderMap] user=${idxUser} pass=${idxPass} role=${idxRole} (start ab Zeile ${startIdx+1})`);
+
+    const users = rows.slice(startIdx).map(r => ({
+      user: r[idxUser] ?? "",
+      pass: r[idxPass] ?? "",
+      role: r[idxRole] ?? ""
+    }));
+    console.log("[Users]", users);
+    return users;
+  }
+
+  async function authFromCSV(inputUser, inputPass) {
+    const users = await fetchUsers();
+    const wantUser = USER_CASE_INSENSITIVE ? (inputUser || "").toLowerCase() : (inputUser || "");
+    for (const row of users) {
+      const rowUser = USER_CASE_INSENSITIVE ? (row.user || "").toLowerCase() : (row.user || "");
+      const rowPass = row.pass || "";
+      if (rowUser === wantUser && rowPass === inputPass) {
+        return { ok: true, role: row.role || "" };
+      }
+    }
+    return { ok: false };
+  }
+
+  // UI-Events
+  $("#user").addEventListener("keydown", e => { if (e.key === "Enter") $("#pass").focus(); });
+  $("#pass").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+  $("#loginBtn").addEventListener("click", doLogin);
+
+  async function doLogin(){
+    const u = $("#user").value;
+    const p = $("#pass").value;
+    if (!u.trim() || !p) { msg("Bitte Nutzer und Passwort eingeben."); return; }
+
+    msg("Prüfe Daten …");
+    try {
+      const res = await authFromCSV(u, p);
+      if (res.ok) {
+        msg("Erfolgreich angemeldet.", true);
+        sessionStorage.setItem("loggedInUser", u.trim());
+        sessionStorage.setItem("role", res.role || "");
+        setTimeout(() => location.href = "ausbilderunterlagen.html", 350);
+      } else {
+        msg("Falscher Nutzer oder Passwort.");
+      }
+    } catch (err) {
+      console.error("[Login Fehler]", err);
+      msg("Fehler beim Laden/Prüfen der Zugangsdaten.");
+    }
+  }
+</script>
+
 </body>
 </html>
