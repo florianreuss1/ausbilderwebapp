@@ -15,35 +15,35 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
     }
 
-    /* Kapitel Button */
-    .kapitel-btn {
-      background: #eee;
-      border: 2px solid #555;
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-size: 20px;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
-
-    /* Dropdown-Menü */
-    .kapitel-menu {
-      display: none;
+    /* Container für den eingebetteten Ordner */
+    .viewer-wrap {
+      flex: 1;
+      display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
+      align-items: center;
+      padding: 16px;
+      backdrop-filter: blur(0px);
     }
-    .kapitel-menu button {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #444;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 16px;
-      cursor: pointer;
+
+    .viewer {
+      width: 95%;
+      max-width: 1100px;
+      height: 70vh;               /* passt die Höhe an; gern ändern */
+      background: rgba(255,255,255,0.9);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .viewer iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #fff;
     }
 
     /* Home-Button */
@@ -53,7 +53,7 @@
       left: 20px;
       background: white;
       border: none;
-      border-radius: 50%;
+      border-radius: 12px;
       padding: 10px;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
@@ -61,18 +61,25 @@
     .home-btn img {
       width: 32px;
       height: 32px;
+      display: block;
+    }
+
+    @media (max-width: 600px) {
+      .viewer { height: 65vh; }
     }
   </style>
 </head>
 <body>
-  <!-- Kapitel Button -->
-  <button class="kapitel-btn" onclick="toggleKapitel()">Kapitel</button>
 
-  <!-- Dropdown-Menü -->
-  <div id="kapitelMenu" class="kapitel-menu">
-    <button onclick="alert('Unterrichtsstruktur')">Unterrichtsstruktur</button>
-    <button onclick="alert('Entwicklungsstufen von Kindern')">Entwicklungsstufen von Kindern</button>
-    <button onclick="alert('Altersgerecht Unterrichten')">Altersgerecht Unterrichten</button>
+  <!-- Eingebetteter Google-Drive-Ordner (LISTENANSICHT) -->
+  <div class="viewer-wrap">
+    <div class="viewer">
+      <!-- Ordner-ID aus deinem Link: 19Gh0Vu8CiPyWJTxPHUB1GYmwwMJsXwNY -->
+      <iframe
+        src="https://drive.google.com/embeddedfolderview?id=19Gh0Vu8CiPyWJTxPHUB1GYmwwMJsXwNY#list"
+        referrerpolicy="no-referrer">
+      </iframe>
+    </div>
   </div>
 
   <!-- Home Button -->
@@ -80,11 +87,5 @@
     <img src="home.jpg" alt="Home">
   </button>
 
-  <script>
-    function toggleKapitel() {
-      const menu = document.getElementById("kapitelMenu");
-      menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
-    }
-  </script>
 </body>
 </html>
