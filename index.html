@@ -21,18 +21,13 @@
     .header img { height:42px; width:auto; object-fit:contain; }
 
     /* Info-Box: Nutzung.html */
-    .info-wrap {
-      width:100%; display:flex; justify-content:center; padding:10px 12px;
-    }
+    .info-wrap { width:100%; display:flex; justify-content:center; padding:10px 12px; }
     .info-card {
       width:100%; max-width:800px; background:#fff; color:#111;
       border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.35);
       overflow:hidden; border:1px solid rgba(0,0,0,.2);
     }
-    .info-card iframe {
-      width:100%; border:0; display:block; background:#fff;
-      /* Höhe wird per JS nach dem Laden gesetzt */
-    }
+    .info-card iframe { width:100%; border:0; display:block; background:#fff; }
 
     /* Login-Inhalt */
     .wrap {
@@ -105,19 +100,13 @@
   </div>
 
   <script>
-    // --- Bereits eingeloggt? -> direkt weiter ---
+    /* --- Beim Laden: nur weiterleiten, wenn in DIESER Sitzung schon eingeloggt --- */
     (function autoRedirectIfLoggedIn(){
-      const u = sessionStorage.getItem("loggedInUser") || localStorage.getItem("loggedInUser");
-      if (u) {
-        if (!sessionStorage.getItem("loggedInUser")) {
-          sessionStorage.setItem("loggedInUser", localStorage.getItem("loggedInUser") || "");
-          sessionStorage.setItem("role", localStorage.getItem("role") || "");
-        }
-        location.href = "hauptseite.html";
-      }
+      const u = sessionStorage.getItem("loggedInUser"); // nur session, KEIN localStorage
+      if (u) location.href = "hauptseite.html";
     })();
 
-    // --- iFrame Höhe an Inhalt von Nutzung.html anpassen (gleiches Origin nötig) ---
+    /* --- Nutzung.html iFrame-Höhe automatisch anpassen --- */
     (function autosizeNutzung(){
       const frame = document.getElementById("nutzungFrame");
       frame.addEventListener("load", () => {
@@ -129,16 +118,16 @@
           );
           frame.style.height = (h || 300) + "px";
         } catch(e) {
-          // Falls aus irgendeinem Grund nicht gleiches Origin: feste Höhe als Fallback
-          frame.style.height = "360px";
+          frame.style.height = "360px"; // Fallback
         }
       });
     })();
 
-    // === CSV-Login (wie zuvor) ===
+    /* === CSV-Login (Google Sheets → CSV) === */
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQzW4h50a-fzAJI_JmCQnbvojwAUKrgXzlxGTz_DHk8FbjMMGv-nzrlVtPawvQQ_zyiC_eLELNMDFuB/pub?output=csv";
     const USER_CASE_INSENSITIVE = true;
     const TRIM_ALL_FIELDS = true;
+
     const $ = (s)=>document.querySelector(s);
     const msg = (t, ok=false)=>{
       const box = $("#msg");
@@ -241,10 +230,15 @@
         const res = await authFromCSV(u, p);
         if (res.ok) {
           msg("Erfolgreich angemeldet.", true);
+          // Nur Sitzung (endet beim Schließen des Browsers/Tabs)
           sessionStorage.setItem("loggedInUser", u.trim());
           sessionStorage.setItem("role", res.role || "");
-          localStorage.setItem("loggedInUser", u.trim());
-          localStorage.setItem("role", res.role || "");
+
+          // Sicherstellen, dass evtl. alte Persistenz entfernt ist
+          localStorage.removeItem("loggedInUser");
+          localStorage.removeItem("role");
+          localStorage.removeItem("expAt");
+
           setTimeout(() => location.href = "hauptseite.html", 350);
         } else {
           msg("Falscher Nutzer oder Passwort.");
@@ -257,5 +251,3 @@
   </script>
 </body>
 </html>
-
-
