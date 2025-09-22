@@ -98,37 +98,38 @@
     <img id="logo-center" src="faust.jpg" alt="Logo Mitte">
     <img id="logo-right" src="melsungen.jpg" alt="Logo rechts">
   </div>
-
-  <!-- Mitte: Menü + Buttons links/rechts -->
-  <div class="center">
-    <div class="action-row">
-      <!-- Links -->
-      <div class="quick-actions left" id="quickActionsLeft">
-        <button data-role="admin" onclick="window.open('https://kalender.digital/ba194cc88c000b471cca','_blank')">Kalender</button>
-        <button data-role="admin,trainer" onclick="window.open('https://onedrive.live.com/view.aspx?resid=95B1CC2FA45FC6F3!s0d552776cf0f4dac804f61a8895851d6','_blank')">One Note</button>
-      </div>
-
-      <!-- Menü -->
-      <button class="menu-btn" id="menuToggle">Menü</button>
-
-      <!-- Rechts -->
-      <div class="quick-actions right" id="quickActionsRight">
-        <button data-role="admin,trainer" onclick="window.open('https://drive.google.com/drive/folders/1TCANqOWg8CRggKd1Usclv7ed6ubbbUp4?usp=sharing','_blank')">Vorlagen</button>
-        <button data-role="admin" onclick="window.open('https://drive.google.com/drive/folders/16KKr7v2r9QbAPNmIUZbSoO0KfvWbtPai?usp=sharing','_blank')">Drive</button>
-      </div>
+<!-- Mitte: Menü + Buttons links/rechts -->
+<div class="center">
+  <div class="action-row">
+    <!-- Links -->
+    <div class="quick-actions left" id="quickActionsLeft">
+      <button data-role="admin" onclick="window.open('https://kalender.digital/ba194cc88c000b471cca','_blank')">Kalender</button>
     </div>
 
-    <!-- Ausklapp-Menü -->
-    <div id="menuList" class="menu-list" role="menu" aria-hidden="true">
-      <button onclick="location.href='ausbilderunterlagen.html'">Ausbilderunterlagen</button>
-      <button onclick="location.href='spiele.html'">Spiele</button>
-      <button onclick="location.href='bilder.html'">Bilder</button>
-      <button onclick="location.href='videos.html'">Videos</button>
-      <button onclick="location.href='index.html'">Login</button>
-    </div>
+    <!-- Menü jetzt mittig -->
+    <button class="menu-btn" id="menuToggle">Menü</button>
 
-    <div style="margin-top:8px; font-size:14px; color:#ddd;">Newsticker</div>
+    <!-- Rechts -->
+    <div class="quick-actions right" id="quickActionsRight">
+      <button data-role="admin,trainer" onclick="window.open('https://onedrive.live.com/view.aspx?resid=95B1CC2FA45FC6F3!s0d552776cf0f4dac804f61a8895851d6','_blank')">One Note</button>
+      <button data-role="admin,trainer" onclick="window.open('https://drive.google.com/drive/folders/1TCANqOWg8CRggKd1Usclv7ed6ubbbUp4?usp=sharing','_blank')">Vorlagen</button>
+      <button data-role="admin" onclick="window.open('https://drive.google.com/drive/folders/16KKr7v2r9QbAPNmIUZbSoO0KfvWbtPai?usp=sharing','_blank')">Drive</button>
+      <!-- Für alle sichtbar -->
+      <button onclick="location.href='mobile.html'">Mobile-App</button>
+    </div>
   </div>
+
+  <!-- Ausklapp-Menü -->
+  <div id="menuList" class="menu-list" role="menu" aria-hidden="true">
+    <button onclick="location.href='ausbilderunterlagen.html'">Ausbilderunterlagen</button>
+    <button onclick="location.href='spiele.html'">Spiele</button>
+    <button onclick="location.href='bilder.html'">Bilder</button>
+    <button onclick="location.href='videos.html'">Videos</button>
+    <button onclick="location.href='index.html'">Login</button>
+  </div>
+
+  <div style="margin-top:8px; font-size:14px; color:#ddd;">Newsticker</div>
+</div>
 
   <!-- Newsticker -->
   <div class="ticker" aria-live="polite">
@@ -205,3 +206,4 @@
   </script>
 </body>
 </html>
+
