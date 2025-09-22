@@ -21,35 +21,33 @@
     }
     .header img { height:54px; width:auto; object-fit:contain; }
 
-    /* Menübutton & Buttons in einer Reihe */
+    /* Zentrum */
     .center {
       display:flex; flex-direction:column; align-items:center;
-    }
-    .action-row {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-top:14px;
-      flex-wrap:wrap;       /* bricht bei kleinen Screens um */
-      justify-content:center;
     }
     .menu-btn {
       background: var(--accent-bg); color:var(--accent-text);
       border: none; padding:10px 20px; font-size:18px;
-      border-radius:12px; cursor:pointer;
+      border-radius:12px; cursor:pointer; margin-top:14px;
       box-shadow:0 2px 6px rgba(0,0,0,0.3);
     }
-    .quick-actions {
-      display:flex; gap:10px;
+
+    /* Button-Zeile unter dem Menü */
+    .quick-actions-row {
+      margin-top:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      justify-content:center;
     }
-    .quick-actions [data-role] { display:none; }
-    .quick-actions button {
+    .quick-actions-row [data-role] { display:none; }
+    .quick-actions-row button {
       background:#fff; color:#000; border:none;
       border-radius:10px; padding:10px 12px; font-weight:bold;
       cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.35);
       transition: transform .1s;
     }
-    .quick-actions button:hover { transform: scale(1.05); }
+    .quick-actions-row button:hover { transform: scale(1.05); }
 
     /* Ausklapp-Menü */
     .menu-list {
@@ -81,13 +79,13 @@
     /* Responsive */
     @media (max-width:750px) {
       .header img { height:44px; }
-      .quick-actions { gap:8px; }
+      .quick-actions-row { gap:8px; }
     }
     @media (max-width:480px) {
       .header img { height:40px; }
       .calendar-wrap { height:420px; }
       .menu-btn { font-size:16px; padding:8px 14px; }
-      .quick-actions button { font-size:14px; padding:8px; }
+      .quick-actions-row button { font-size:14px; padding:8px; }
     }
   </style>
 </head>
@@ -98,38 +96,32 @@
     <img id="logo-center" src="faust.jpg" alt="Logo Mitte">
     <img id="logo-right" src="melsungen.jpg" alt="Logo rechts">
   </div>
-<!-- Mitte: Menü + Buttons links/rechts -->
-<div class="center">
-  <div class="action-row">
-    <!-- Links -->
-    <div class="quick-actions left" id="quickActionsLeft">
-      <button data-role="admin" onclick="window.open('https://kalender.digital/ba194cc88c000b471cca','_blank')">Kalender</button>
-    </div>
 
-    <!-- Menü jetzt mittig -->
+  <!-- Menü-Button oben -->
+  <div class="center">
     <button class="menu-btn" id="menuToggle">Menü</button>
 
-    <!-- Rechts -->
-    <div class="quick-actions right" id="quickActionsRight">
+    <!-- Buttons in zweiter Zeile -->
+    <div class="quick-actions-row" id="quickActionsRow">
+      <button data-role="admin" onclick="window.open('https://kalender.digital/ba194cc88c000b471cca','_blank')">Kalender</button>
       <button data-role="admin,trainer" onclick="window.open('https://onedrive.live.com/view.aspx?resid=95B1CC2FA45FC6F3!s0d552776cf0f4dac804f61a8895851d6','_blank')">One Note</button>
       <button data-role="admin,trainer" onclick="window.open('https://drive.google.com/drive/folders/1TCANqOWg8CRggKd1Usclv7ed6ubbbUp4?usp=sharing','_blank')">Vorlagen</button>
       <button data-role="admin" onclick="window.open('https://drive.google.com/drive/folders/16KKr7v2r9QbAPNmIUZbSoO0KfvWbtPai?usp=sharing','_blank')">Drive</button>
       <!-- Für alle sichtbar -->
       <button onclick="location.href='mobile.html'">Mobile-App</button>
     </div>
-  </div>
 
-  <!-- Ausklapp-Menü -->
-  <div id="menuList" class="menu-list" role="menu" aria-hidden="true">
-    <button onclick="location.href='ausbilderunterlagen.html'">Ausbilderunterlagen</button>
-    <button onclick="location.href='spiele.html'">Spiele</button>
-    <button onclick="location.href='bilder.html'">Bilder</button>
-    <button onclick="location.href='videos.html'">Videos</button>
-    <button onclick="location.href='index.html'">Login</button>
-  </div>
+    <!-- Ausklapp-Menü -->
+    <div id="menuList" class="menu-list" role="menu" aria-hidden="true">
+      <button onclick="location.href='ausbilderunterlagen.html'">Ausbilderunterlagen</button>
+      <button onclick="location.href='spiele.html'">Spiele</button>
+      <button onclick="location.href='bilder.html'">Bilder</button>
+      <button onclick="location.href='videos.html'">Videos</button>
+      <button onclick="location.href='index.html'">Login</button>
+    </div>
 
-  <div style="margin-top:8px; font-size:14px; color:#ddd;">Newsticker</div>
-</div>
+    <div style="margin-top:8px; font-size:14px; color:#ddd;">Newsticker</div>
+  </div>
 
   <!-- Newsticker -->
   <div class="ticker" aria-live="polite">
@@ -166,20 +158,19 @@
     if (role === 'administrator' || role === 'admins' || role === 'adminstrator') role = 'admin';
     if (role === 'trainer/in' || role === 'trainerin' || role === 'coach') role = 'trainer';
 
-    const showAllowed = scope => {
-      scope.querySelectorAll('[data-role]').forEach(btn => btn.style.display = 'none');
-      const showAll = sel => scope.querySelectorAll(sel).forEach(btn => btn.style.display = 'inline-block');
+    const scope = document.getElementById('quickActionsRow');
+    if (!scope) return;
 
-      if (role === 'admin') {
-        showAll('[data-role*="admin"]');
-        showAll('[data-role*="trainer"]');
-      } else if (role === 'trainer') {
-        showAll('[data-role*="trainer"]');
-      }
-    };
+    scope.querySelectorAll('[data-role]').forEach(btn => btn.style.display = 'none');
 
-    showAllowed(document.getElementById('quickActionsLeft'));
-    showAllowed(document.getElementById('quickActionsRight'));
+    const showAll = sel => scope.querySelectorAll(sel).forEach(btn => btn.style.display = 'inline-block');
+
+    if (role === 'admin') {
+      showAll('[data-role*="admin"]');
+      showAll('[data-role*="trainer"]');
+    } else if (role === 'trainer') {
+      showAll('[data-role*="trainer"]');
+    }
   });
 
   // Newsticker
@@ -206,4 +197,3 @@
   </script>
 </body>
 </html>
-
