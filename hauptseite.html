@@ -21,16 +21,37 @@
     }
     .header img { height:54px; width:auto; object-fit:contain; }
 
-    /* Zentrum: Menü + Schnellzugriffe */
+    /* Menübutton & Buttons in einer Reihe */
     .center {
       display:flex; flex-direction:column; align-items:center;
+    }
+    .action-row {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-top:14px;
+      flex-wrap:wrap;       /* bricht bei kleinen Screens um */
+      justify-content:center;
     }
     .menu-btn {
       background: var(--accent-bg); color:var(--accent-text);
       border: none; padding:10px 20px; font-size:18px;
-      border-radius:12px; cursor:pointer; margin-top:6px;
+      border-radius:12px; cursor:pointer;
       box-shadow:0 2px 6px rgba(0,0,0,0.3);
     }
+    .quick-actions {
+      display:flex; gap:10px;
+    }
+    .quick-actions [data-role] { display:none; }
+    .quick-actions button {
+      background:#fff; color:#000; border:none;
+      border-radius:10px; padding:10px 12px; font-weight:bold;
+      cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.35);
+      transition: transform .1s;
+    }
+    .quick-actions button:hover { transform: scale(1.05); }
+
+    /* Ausklapp-Menü */
     .menu-list {
       display:none; flex-direction:column; gap:10px; margin-top:12px;
     }
@@ -38,28 +59,6 @@
       background: transparent; color:var(--text); border:1px solid #444;
       padding:8px 12px; border-radius:8px; cursor:pointer;
     }
-
-    /* kleines Rollen-Badge */
-    #roleBadge { margin-top:6px; font-size:12px; color:#bbb; }
-
-    /* Schnellzugriff-Buttons um den Menübutton herum */
-    .quick-actions {
-      margin-top:14px;
-      display:grid;
-      grid-template-columns: repeat(2, minmax(140px, 200px));
-      gap:12px;
-      justify-content:center;
-    }
-    /* Standard: Buttons mit data-role sind zunächst unsichtbar */
-    .quick-actions [data-role] { display:none; }
-
-    .quick-actions button {
-      background:#fff; color:#000; border:none;
-      border-radius:10px; padding:12px 10px; font-weight:bold;
-      cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.35);
-      transition: transform .1s;
-    }
-    .quick-actions button:hover { transform: scale(1.05); }
 
     /* Newsticker */
     .ticker {
@@ -82,13 +81,13 @@
     /* Responsive */
     @media (max-width:750px) {
       .header img { height:44px; }
-      .quick-actions { grid-template-columns: repeat(2, minmax(120px, 1fr)); gap:10px; }
+      .quick-actions { gap:8px; }
     }
     @media (max-width:480px) {
       .header img { height:40px; }
       .calendar-wrap { height:420px; }
-      .menu-btn { font-size:16px; }
-      .quick-actions { grid-template-columns: 1fr 1fr; }
+      .menu-btn { font-size:16px; padding:8px 14px; }
+      .quick-actions button { font-size:14px; padding:8px; }
     }
   </style>
 </head>
@@ -100,27 +99,32 @@
     <img id="logo-right" src="melsungen.jpg" alt="Logo rechts">
   </div>
 
-  <!-- Mitte: Menübutton + Schnellzugriffe -->
+  <!-- Mitte: Menü + Buttons links/rechts -->
   <div class="center">
-    <button class="menu-btn" id="menuToggle">Menü</button>
+    <div class="action-row">
+      <!-- Links -->
+      <div class="quick-actions left" id="quickActionsLeft">
+        <button data-role="admin" onclick="window.open('https://kalender.digital/ba194cc88c000b471cca','_blank')">Kalender</button>
+        <button data-role="admin,trainer" onclick="window.open('https://onedrive.live.com/view.aspx?resid=95B1CC2FA45FC6F3!s0d552776cf0f4dac804f61a8895851d6','_blank')">One Note</button>
+      </div>
 
+      <!-- Menü -->
+      <button class="menu-btn" id="menuToggle">Menü</button>
+
+      <!-- Rechts -->
+      <div class="quick-actions right" id="quickActionsRight">
+        <button data-role="admin,trainer" onclick="window.open('https://drive.google.com/drive/folders/1TCANqOWg8CRggKd1Usclv7ed6ubbbUp4?usp=sharing','_blank')">Vorlagen</button>
+        <button data-role="admin" onclick="window.open('https://drive.google.com/drive/folders/16KKr7v2r9QbAPNmIUZbSoO0KfvWbtPai?usp=sharing','_blank')">Drive</button>
+      </div>
+    </div>
+
+    <!-- Ausklapp-Menü -->
     <div id="menuList" class="menu-list" role="menu" aria-hidden="true">
       <button onclick="location.href='ausbilderunterlagen.html'">Ausbilderunterlagen</button>
       <button onclick="location.href='spiele.html'">Spiele</button>
       <button onclick="location.href='bilder.html'">Bilder</button>
       <button onclick="location.href='videos.html'">Videos</button>
       <button onclick="location.href='index.html'">Login</button>
-    </div>
-
-    <!-- kleines Badge zur Rollen-Kontrolle -->
-    <div id="roleBadge"></div>
-
-    <!-- Schnellzugriffe (rollenbasiert sichtbar) -->
-    <div class="quick-actions" id="quickActions">
-      <button data-role="admin" onclick="window.open('https://kalender.digital/ba194cc88c000b471cca','_blank')">Kalender</button>
-      <button data-role="admin,trainer" onclick="window.open('https://onedrive.live.com/view.aspx?resid=95B1CC2FA45FC6F3!s0d552776cf0f4dac804f61a8895851d6&migratedtospo=true&redeem=aHR0cHM6Ly8xZHJ2Lm1zL28vYy85NWIxY2MyZmE0NWZjNmYzL0VuWW5WUTBQejZ4TmdFOWhxSWxZVWRZQmU4R2NmUGtnUG1EVkpjU2NpNEwyY3c_ZT1kdW9FQXE&wd=target%28Protokoll.one%7C04a212ae-eb87-4416-8dee-ac76ae1faac5%2FVorlage%20Protokoll%7Ca1dc29ea-0d9c-4d52-94ae-de78fefb71bd%2F%29&wdorigin=NavigationUrl','_blank')">One Note</button>
-      <button data-role="admin,trainer" onclick="window.open('https://drive.google.com/drive/folders/1TCANqOWg8CRggKd1Usclv7ed6ubbbUp4?usp=sharing','_blank')">Vorlagen</button>
-      <button data-role="admin" onclick="window.open('https://drive.google.com/drive/folders/16KKr7v2r9QbAPNmIUZbSoO0KfvWbtPai?usp=sharing','_blank')">Drive</button>
     </div>
 
     <div style="margin-top:8px; font-size:14px; color:#ddd;">Newsticker</div>
@@ -137,15 +141,15 @@
   </div>
 
   <script>
-  /* ---- Zugriff nur für eingeloggte Nutzer (Session) ---- */
+  /* ---- Zugriff nur für eingeloggte Nutzer ---- */
   (function guard(){
-    const user = sessionStorage.getItem('loggedInUser'); // nur Session prüfen
+    const user = sessionStorage.getItem('loggedInUser');
     if (!user) {
-      location.href = 'index.html'; // zurück zum Login
+      location.href = 'index.html';
     }
   })();
 
-  // Menü Ein/Aus
+  // Menü
   const toggle = document.getElementById('menuToggle');
   const menu = document.getElementById('menuList');
   toggle.addEventListener('click', () => {
@@ -154,41 +158,30 @@
     menu.setAttribute('aria-hidden', visible ? 'true' : 'false');
   });
 
-  // --- Rollen-Filter robust ---
+  // Rollen-Filter
   document.addEventListener('DOMContentLoaded', () => {
     const rawRole = sessionStorage.getItem('role') || '';
-    let role = (rawRole || '').normalize('NFKC').trim().toLowerCase();
+    let role = rawRole.normalize('NFKC').trim().toLowerCase();
     if (role === 'administrator' || role === 'admins' || role === 'adminstrator') role = 'admin';
     if (role === 'trainer/in' || role === 'trainerin' || role === 'coach') role = 'trainer';
 
-    const badge = document.getElementById('roleBadge');
-    if (badge) badge.textContent = role ? `Rolle: ${role}` : 'Rolle: (leer)';
+    const showAllowed = scope => {
+      scope.querySelectorAll('[data-role]').forEach(btn => btn.style.display = 'none');
+      const showAll = sel => scope.querySelectorAll(sel).forEach(btn => btn.style.display = 'inline-block');
 
-    const scope = document.querySelector('#quickActions');
-    if (!scope) return;
+      if (role === 'admin') {
+        showAll('[data-role*="admin"]');
+        showAll('[data-role*="trainer"]');
+      } else if (role === 'trainer') {
+        showAll('[data-role*="trainer"]');
+      }
+    };
 
-    // erst alles verstecken …
-    scope.querySelectorAll('[data-role]').forEach(btn => btn.style.display = 'none');
-
-    // … dann erlaubtes explizit einblenden (CSS überschreiben)
-    const showAll = sel => scope.querySelectorAll(sel).forEach(btn => btn.style.display = 'inline-block');
-
-    if (role === 'admin') {
-      showAll('[data-role*="admin"]');
-      showAll('[data-role*="trainer"]'); // Admin sieht auch Trainer-Sachen
-    } else if (role === 'trainer') {
-      showAll('[data-role*="trainer"]');
-    } else {
-      console.warn('Unbekannte/Leere Rolle:', rawRole);
-    }
-
-    console.log('[RoleFilter]', {
-      rawRole, role,
-      shown: [...scope.querySelectorAll('[data-role]')].filter(b=>b.style.display!=='none').map(b=>b.textContent.trim())
-    });
+    showAllowed(document.getElementById('quickActionsLeft'));
+    showAllowed(document.getElementById('quickActionsRight'));
   });
 
-  // Newsticker (Google Sheets "Im Web veröffentlichen" → CSV)
+  // Newsticker
   const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqv9vVFE1kHZdb48JLBpUd3uwsin78PVjCLEGDmUztI78RYSPstjAxUi0uuwV-34fe91G4SfuQHGsl/pub?output=csv";
 
   async function loadTicker() {
