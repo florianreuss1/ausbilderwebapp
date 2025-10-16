@@ -108,14 +108,14 @@
   <script>
     // ---------- Firebase Init ----------
     firebase.initializeApp({
-    apiKey: "AIzaSyDNY_Laa_eeiQmC6rcHWRNn_P-qdA7vzdw",
-    authDomain: "wt-plus-login.firebaseapp.com",
-    databaseURL: "https://wt-plus-login-default-rtdb.firebaseio.com",
-    projectId: "wt-plus-login",
-    storageBucket: "wt-plus-login.firebasestorage.app",
-    messagingSenderId: "775441256129",
-    appId: "1:775441256129:web:64b962f72181248ef04e40"
-       });
+      apiKey: "AIzaSyDNY_Laa_eeiQmC6rcHWRNn_P-qdA7vzdw",
+      authDomain: "wt-plus-login.firebaseapp.com",
+      databaseURL: "https://wt-plus-login-default-rtdb.firebaseio.com",
+      projectId: "wt-plus-login",
+      storageBucket: "wt-plus-login.firebasestorage.app",
+      messagingSenderId: "775441256129",
+      appId: "1:775441256129:web:64b962f72181248ef04e40"
+    });
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
@@ -125,15 +125,23 @@
     // ---------- Auto-Weiterleitung, wenn schon angemeldet ----------
     auth.onAuthStateChanged((user) => {
       if (user) {
-        // Rolle holen, falls noch nicht gesetzt
-        if (!sessionStorage.getItem("role")) {
+        // Rolle & School holen, falls noch nicht gesetzt
+        if (!sessionStorage.getItem("role") || !sessionStorage.getItem("school")) {
           db.collection("rollen").doc(user.uid).get().then((snap)=>{
-            const role = (snap.exists ? (snap.data().role||"user") : "user").toLowerCase();
+            let role = "user";
+            let school = "";
+            if (snap.exists) {
+              const data = snap.data();
+              role   = (data.role || "user").toLowerCase();
+              school = data.school || "";
+            }
             sessionStorage.setItem("role", role);
+            sessionStorage.setItem("school", school);
             sessionStorage.setItem("loggedInUser", user.email || "");
             location.href = "hauptseite.html";
           }).catch(()=>{
             sessionStorage.setItem("role","user");
+            sessionStorage.setItem("school","");
             sessionStorage.setItem("loggedInUser", user.email || "");
             location.href = "hauptseite.html";
           });
@@ -187,13 +195,20 @@
         const cred = await auth.signInWithEmailAndPassword(email, pass);
         const uid  = cred.user.uid;
 
-        // 2) Rolle aus Firestore
+        // 2) Rolle & School aus Firestore
         const snap = await db.collection("rollen").doc(uid).get();
-        const role = (snap.exists ? (snap.data().role||"user") : "user").toLowerCase();
+        let role = "user";
+        let school = "";
+        if (snap.exists) {
+          const data = snap.data();
+          role   = (data.role || "user").toLowerCase();
+          school = data.school || "";
+        }
 
         // 3) Session speichern
         sessionStorage.setItem("loggedInUser", email);
         sessionStorage.setItem("role", role);
+        sessionStorage.setItem("school", school);
 
         msg("Erfolgreich angemeldet.", true);
         setTimeout(()=> location.href = "hauptseite.html", 300);
@@ -204,6 +219,8 @@
         if (err.code === "auth/invalid-email") human = "E-Mail-Adresse ist ungültig.";
         else if (err.code === "auth/user-disabled") human = "Konto ist deaktiviert.";
         else if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") human = "E-Mail oder Passwort falsch.";
+        else if (err.code === "auth/too-many-requests") human = "Zu viele Versuche. Bitte kurz warten.";
+        else if (err.code === "auth/network-request-failed") human = "Netzwerkfehler. Bitte Verbindung prüfen.";
         msg(human);
       } finally {
         btn.disabled = false;
