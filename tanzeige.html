@@ -19,10 +19,13 @@
     .day{ margin-top:18px; border-top:1px solid var(--border); padding-top:14px; }
     .day h2{ margin:0 0 8px; font-size:18px; color:#eaeaea; letter-spacing:.2px; }
 
+    /* Spalten: What | Time | 6 Trainer */
     .slot{
-      display:grid; grid-template-columns: 160px repeat(3, minmax(120px,1fr));
+      display:grid;
+      grid-template-columns: 240px 140px repeat(6, minmax(120px,1fr));
       gap:10px; align-items:center; padding:10px 0; border-bottom:1px dashed #1c1c1c;
     }
+    .what{ color:#eaeaea; font-size:15px; }
     .time{ font-weight:bold; letter-spacing:.2px; }
     .names{ display:contents; }
     .name{
@@ -31,13 +34,22 @@
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .placeholder{ color:#777; font-style:italic; }
-    @media (max-width:720px){
-      .slot{ grid-template-columns: 120px 1fr 1fr; grid-auto-rows:auto; }
-      .slot .time{ grid-column:1 / 2; }
-      .slot .names{ grid-column:2 / -1; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+    /* Mobil: What & Time oben, Trainer darunter im Grid */
+    @media (max-width:980px){
+      .slot{ grid-template-columns: 1fr 120px; grid-auto-rows:auto; align-items:start; }
+      .what{ grid-column:1 / 2; }
+      .time{ grid-column:2 / 3; text-align:right; }
+      .names{
+        grid-column:1 / -1;
+        display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:8px;
+      }
     }
-    @media (max-width:460px){
-      .slot .names{ grid-template-columns:1fr; }
+    @media (max-width:620px){
+      .names{ grid-template-columns:repeat(2, 1fr); }
+    }
+    @media (max-width:420px){
+      .names{ grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -68,11 +80,25 @@
     const db = firebase.firestore();
 
     // ---------- Aufbau ----------
+    // Pro Zeitfenster auch "what" (Beschreibung)
     const SLOTS = [
-      { day: "Montag",     times: ["17:30-18:15", "19:30-21:00"] },
-      { day: "Mittwoch",   times: ["16:30-17:15", "17:30-18:15", "18:30-19:15", "19:30-21:00"] },
-      { day: "Donnerstag", times: ["16:30-17:15", "17:30-18:15", "18:45-20:45"] }
+      { day: "Montag", slots: [
+      { time: "17:30-18:15", what: "Jugendliche 8-12 Jahre" },
+        { time: "19:30-21:00", what: "Erwachsene ab 13 Jahre" },
+      ]},
+      { day: "Mittwoch", slots: [
+        { time: "16:30-17:15", what: "Minis ab 4 Jahre" },
+        { time: "17:30-18:15", what: "Kids 5-7 Jahre" },
+        { time: "18:30-19:15", what: "Jugendliche 8-12 Jahre" },
+        { time: "19:30-21:00", what: "Erwachsene ab 13 Jahre" },
+      ]},
+      { day: "Donnerstag", slots: [
+        { time: "16:30-17:15", what: "Minis ab 4 Jahre" },
+        { time: "17:30-18:15", what: "Kids 5-7 Jahre" },
+        { time: "18:45-19:45", what: "ChiKung" },
+      ]},
     ];
+
     const slug = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
 
     const root = document.getElementById('schedule');
@@ -88,15 +114,21 @@
         const day=document.createElement('div');
         day.className='day';
         day.innerHTML=`<h2>${group.day}</h2>`;
-        for(const t of group.times){
+        for(const slot of group.slots){
           const row=document.createElement('div');
           row.className='slot';
+          row.setAttribute('data-day', group.day);
+          row.setAttribute('data-time', slot.time); // stabil für IDs
           row.innerHTML=`
-            <div class="time">${t}</div>
+            <div class="what">${slot.what || ""}</div>
+            <div class="time">${slot.time}</div>
             <div class="names">
               <div class="name placeholder">Trainer 1</div>
               <div class="name placeholder">Trainer 2</div>
               <div class="name placeholder">Trainer 3</div>
+              <div class="name placeholder">Trainer 4</div>
+              <div class="name placeholder">Trainer 5</div>
+              <div class="name placeholder">Trainer 6</div>
             </div>`;
           day.appendChild(row);
         }
@@ -104,22 +136,29 @@
       }
     }
 
+    // Füllt auf 6 Einträge auf (Kompatibilität mit alten 3er-Arrays)
+    function pad6(arr){
+      const out = Array.isArray(arr) ? arr.slice(0,6) : [];
+      while(out.length<6) out.push("");
+      return out;
+    }
+
     function applyValues(data){
       const map = {};
       for(const [key, val] of Object.entries(data||{})){
-        map[key] = Array.isArray(val) ? val : ["","",""];
+        map[key] = pad6(val);
       }
       document.querySelectorAll('.day').forEach(day=>{
         const dname = day.querySelector('h2').textContent;
         day.querySelectorAll('.slot').forEach(row=>{
-          const time = row.querySelector('.time').textContent;
+          const time = row.getAttribute('data-time');
           const id = `${slug(dname)}__${slug(time)}`;
-          const arr = map[id] || ["","",""];
+          const arr = map[id] || pad6([]);
           const boxes = row.querySelectorAll('.name');
-          arr.forEach((v,i)=>{
-            boxes[i].textContent = v || "";
-            boxes[i].classList.toggle('placeholder', !v);
-            if(!v) boxes[i].textContent = `Trainer ${i+1}`;
+          boxes.forEach((box,i)=>{
+            const v = arr[i] || "";
+            box.textContent = v ? v : `Trainer ${i+1}`;
+            box.classList.toggle('placeholder', !v);
           });
         });
       });
