@@ -13,14 +13,12 @@
       min-height:100vh; display:flex; flex-direction:column;
     }
 
-    /* Header mit 3 Logos */
     .header {
       display:flex; justify-content:space-between; align-items:center;
       padding:10px 12px; gap:10px;
     }
     .header img { height:80px; width:auto; object-fit:contain; }
 
-    /* Info-Box: Nutzung.html */
     .info-wrap { width:100%; display:flex; justify-content:center; padding:10px 12px; }
     .info-card {
       width:100%; max-width:800px; background:#fff; color:#111;
@@ -29,7 +27,6 @@
     }
     .info-card iframe { width:100%; border:0; display:block; background:#fff; }
 
-    /* Login-Inhalt */
     .wrap {
       flex:1; display:flex; flex-direction:column; align-items:center; gap:14px;
       padding:12px;
@@ -54,6 +51,14 @@
       box-shadow:0 2px 6px rgba(0,0,0,.35); margin-top:6px;
     }
     .login-btn[disabled]{ opacity:.6; cursor:default; }
+
+    /* Neuer Button */
+    .forgot-btn {
+      background:none; border:none; color:#8cf; cursor:pointer;
+      text-decoration:underline; font-size:14px; margin-top:4px;
+    }
+    .forgot-btn:hover { color:#adf; }
+
     .msg {
       width:100%; max-width:560px; min-height:40px;
       background:#fff; color:#111; border-radius:6px;
@@ -97,10 +102,14 @@
     </div>
 
     <button class="login-btn" id="loginBtn">Login</button>
+
+    <!-- 🆕 Passwort vergessen -->
+    <button class="forgot-btn" id="forgotBtn">Passwort vergessen?</button>
+
     <div id="msg" class="msg empty"> </div>
   </div>
 
-  <!-- Firebase SDKs (compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
@@ -119,13 +128,11 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
-    // Login nur für diese Sitzung
     auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
 
-    // ---------- Auto-Weiterleitung, wenn schon angemeldet ----------
+    // ---------- Auto-Weiterleitung ----------
     auth.onAuthStateChanged((user) => {
       if (user) {
-        // Rolle & School holen, falls noch nicht gesetzt
         if (!sessionStorage.getItem("role") || !sessionStorage.getItem("school")) {
           db.collection("rollen").doc(user.uid).get().then((snap)=>{
             let role = "user";
@@ -191,11 +198,9 @@
       btn.disabled = true; msg("Anmeldung …");
 
       try {
-        // 1) Auth bei Firebase
         const cred = await auth.signInWithEmailAndPassword(email, pass);
         const uid  = cred.user.uid;
 
-        // 2) Rolle & School aus Firestore
         const snap = await db.collection("rollen").doc(uid).get();
         let role = "user";
         let school = "";
@@ -205,7 +210,6 @@
           school = data.school || "";
         }
 
-        // 3) Session speichern
         sessionStorage.setItem("loggedInUser", email);
         sessionStorage.setItem("role", role);
         sessionStorage.setItem("school", school);
@@ -226,6 +230,25 @@
         btn.disabled = false;
       }
     }
+
+    // ---------- 🆕 Passwort-vergessen-Funktion ----------
+    $("#forgotBtn").addEventListener("click", async () => {
+      const email = $("#user").value.trim();
+      if (!email) { msg("Bitte zuerst Ihre E-Mail-Adresse eingeben."); return; }
+
+      msg("Sende E-Mail zum Zurücksetzen …");
+      try {
+        await auth.sendPasswordResetEmail(email);
+        msg("E-Mail zum Zurücksetzen wurde gesendet.", true);
+      } catch (err) {
+        console.error("[Passwort zurücksetzen Fehler]", err);
+        let human = "Fehler beim Senden der E-Mail.";
+        if (err.code === "auth/invalid-email") human = "E-Mail-Adresse ist ungültig.";
+        else if (err.code === "auth/user-not-found") human = "Kein Konto mit dieser E-Mail gefunden.";
+        else if (err.code === "auth/network-request-failed") human = "Netzwerkfehler. Bitte Verbindung prüfen.";
+        msg(human);
+      }
+    });
   </script>
 </body>
 </html>
