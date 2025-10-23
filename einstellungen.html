@@ -29,11 +29,15 @@
       gap:24px; padding:16px;
     }
 
-    /* Button direkt oben unter den Logos */
+    /* Button-Bereich direkt unter den Logos */
     .top-actions{
-      width:95%; max-width:980px; display:flex; justify-content:center;
+      width:95%; max-width:980px;
+      display:flex; justify-content:center;
       margin-top:6px; /* nah unter den Logos */
+      gap:16px;       /* 👈 Abstand zwischen Buttons */
     }
+
+    /* Buttons */
     .btn {
       background:#fff; color:#000; border:none;
       padding:14px 28px; font-size:18px;
@@ -60,14 +64,13 @@
     <img src="melsungen.jpg" alt="Logo rechts">
   </div>
 
+  <!-- Inhalt -->
   <div class="wrap">
-    <!-- Button direkt oben -->
     <div class="top-actions">
       <button class="btn" onclick="location.href='admintrainingszeiten.html'">Trainingsplan</button>
       <button class="btn" onclick="location.href='passwort-aendern.html'">Passwort ändern</button>
     </div>
   </div>
-
 
   <!-- Home -->
   <button class="home-btn" onclick="location.href='hauptseite.html'">
